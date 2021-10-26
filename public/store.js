@@ -31,7 +31,7 @@ function ready(){
 
 let stripeHandler = StripeCheckout.configure({
     key: stripePublicKey,
-    locale: 'auto',
+    locale: 'en',
     token: function(token){
         let items = []
         let cartItemContainer = document.getElementsByClassName('cart-items')[0]
@@ -39,7 +39,7 @@ let stripeHandler = StripeCheckout.configure({
 
         for(let i = 0; i < cartRows.length; i++){
             let cartRow = cartRows[i]
-            let quantityElement = cartRow.getElementsByClassName('cart-quantity-input')
+            let quantityElement = cartRow.getElementsByClassName('cart-quantity-input')[0]
             let quantity = quantityElement.value
             let id = cartRow.dataset.itemId
             items.push({

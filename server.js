@@ -13,21 +13,6 @@ const stripe = require('stripe')(stripeSecretKey)
 app.set('view engine', 'ejs')
 app.use(express.json())
 app.use(express.static('public'))
-app.listen(3000)
-
-app.get('/store.html', function(req, res){
-    fs.readFile('items.json', function(error, data){
-        if(error){
-            res.status(500).end()
-        }
-        else{
-            res.render('store.ejs', {
-                stripePublicKey: stripePublicKey,
-                items: JSON.parse(data)
-            })
-        }
-    })
-})
 
 app.get('/store', function(req, res){
     fs.readFile('items.json', function(error, data){
@@ -52,11 +37,11 @@ app.post('/purchase', function(req, res){
             const itemJson = JSON.parse(data)
             const itemsArray = itemJson.music.concat(itemJson.merch)
             let total = 0
-            req.body.items.forEach(function(items){
+            req.body.items.forEach(function(item){
                 const itemJson = itemsArray.find(function(i){
-                    return i.id == items.id
+                    return i.id == item.id
                 })
-                total = total + (itemJson.price*items.quantity)
+                total = total + (itemJson.price*item.quantity)
             })
 
             stripe.charges.create({
@@ -73,3 +58,5 @@ app.post('/purchase', function(req, res){
         }
     })
 })
+
+app.listen(3000)
