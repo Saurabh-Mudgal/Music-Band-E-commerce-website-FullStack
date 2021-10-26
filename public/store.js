@@ -29,14 +29,61 @@ function ready(){
     let purchaseButton = document.getElementsByClassName('btn-purchase')[0].addEventListener('click', purchaseClicked)
 }
 
-function purchaseClicked(){
-    alert('Thank you for your purchase!')
+let stripeHandler = StripeCheckout.configure({
+    key: stripePublicKey,
+    locale: 'auto',
+    token: function(token){
+        let items = []
+        let cartItemContainer = document.getElementsByClassName('cart-items')[0]
+        let cartRows = cartItemContainer.getElementsByClassName('cart-row')
+
+        for(let i = 0; i < cartRows.length; i++){
+            let cartRow = cartRows[i]
+            let quantityElement = cartRow.getElementsByClassName('cart-quantity-input')
+            let quantity = quantityElement.value
+            let id = cartRow.dataset.itemId
+            items.push({
+                id: id,
+                quantity: quantity
+            })
+        }
+
+        fetch('/purchase', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                stripeTokenId: token.id,
+                items: items
+            })
+        }).then(function(res){
+            return res.json()
+        }).then(function(data){
+            successfulPurchase(data)
+        }).catch(function(error){
+            console.error(error)
+        })
+    }
+})
+
+function successfulPurchase(data){   
+    alert(data.message)
+
     let cartItems = document.getElementsByClassName('cart-items')[0]
 
     while(cartItems.hasChildNodes()){
         cartItems.removeChild(cartItems.firstChild)
     }
     updateCartTotal()
+}
+
+function purchaseClicked(){
+    let price = parseFloat(document.getElementsByClassName('cart-total-price')[0].innerText.replace('$', '')) * 100
+    stripeHandler.open({
+        amount: price
+    })   
 }
 
 function addToCartClick(event){
@@ -46,15 +93,17 @@ function addToCartClick(event){
     let title = shopItem.getElementsByClassName('shop-item-title')[0].innerText
     let price = parseFloat(shopItem.getElementsByClassName('shop-item-price')[0].innerText.replace('$', ''))
     let imageSRC = shopItem.getElementsByClassName('shop-item-image')[0].src
+    let id = shopItem.dataset.itemId
 
-    addItemToCart(title, price, imageSRC)
+    addItemToCart(title, price, imageSRC, id)
     updateCartTotal()
 
 }
 
-function addItemToCart(title, price, imageSRC){
+function addItemToCart(title, price, imageSRC, id){
     let cartRow = document.createElement('div')
     cartRow.classList.add('cart-row')
+    cartRow.dataset.itemId = id
 
     let cartItems = document.getElementsByClassName('cart-items')[0]
     let cartItemNames = cartItems.getElementsByClassName('cart-item-title')
